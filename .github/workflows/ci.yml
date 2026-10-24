@@ -24,7 +24,7 @@ jobs:
         cd server
         npm install
 
-    - name: Проверяем сборку проекта
+    - name: Проверяем строгую сборку TypeScript
       run: |
         cd server
-        npm run build --if-present
+        npm run build
