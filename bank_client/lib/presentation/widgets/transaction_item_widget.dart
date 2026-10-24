@@ -33,27 +33,42 @@ class TransactionItemWidget extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: iconColor.withValues(alpha: 0.15), shape: BoxShape.circle),
-                child: Icon(icon, color: iconColor, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(color: mainTextColor, fontWeight: FontWeight.bold, fontSize: 14),
+          // Левая часть с иконкой и текстом
+          Expanded(
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(color: iconColor.withValues(alpha: 0.15), shape: BoxShape.circle),
+                  child: Icon(icon, color: iconColor, size: 20),
+                ),
+                const SizedBox(width: 12),
+                // Оборачиваем колонку текста в Expanded, чтобы длинные названия не ломали верстку
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(color: mainTextColor, fontWeight: FontWeight.bold, fontSize: 14),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        date,
+                        style: TextStyle(color: subTextColor, fontSize: 12),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 2),
-                  Text(date, style: TextStyle(color: subTextColor, fontSize: 12)),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
+          const SizedBox(width: 8),
+          // Правая часть с суммой (фиксированная, не сжимается)
           Text(
             amount,
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: isNegative ? Colors.redAccent : Colors.greenAccent),

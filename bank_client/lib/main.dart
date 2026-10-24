@@ -24,9 +24,9 @@ class MyApp extends StatelessWidget {
         builder: (context, currentMode, child) {
           return MaterialApp(
             debugShowCheckedModeBanner: false,
-            themeMode: ThemeMode.dark, // <--- Принудительно включаем темную тему для проверки
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
+            themeMode: currentMode,
             home: const RegisterScreen(),
           );
         },

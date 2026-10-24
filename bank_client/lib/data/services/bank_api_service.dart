@@ -1,36 +1,23 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart'; // Нужен для kIsWeb
 
+import 'dart:async';
 import 'dart:developer' as developer;
+
+import 'package:bank_client/data/services/api_constants.dart';
 
 class BankApiService {
   late final Dio _dio;
 
   BankApiService() {
-    // Определяем правильный URL в зависимости от того, где запущено приложение:
-    String baseUrl;
-
-    if (kIsWeb) {
-      // Если запущено в Chrome (веб)
-      baseUrl = 'http://localhost:3000';
-    } else if (defaultTargetPlatform == TargetPlatform.android) {
-      // Если это Android-эмулятор (он не видит localhost напрямую)
-      baseUrl = 'http://10.0.2.2:3000';
-    } else {
-      // Для iOS-симулятора или реального десктопа/айфона по кабелю (впиши IP своего ПК, если на реальном телефоне)
-      baseUrl = 'http://localhost:3000';
-    }
-
-    _dio = Dio(BaseOptions(baseUrl: baseUrl, connectTimeout: const Duration(seconds: 5), receiveTimeout: const Duration(seconds: 5)));
+    _dio = Dio(
+      BaseOptions(baseUrl: ApiConstants.baseUrl, connectTimeout: const Duration(seconds: 60), receiveTimeout: const Duration(seconds: 60)),
+    );
   }
 
   // 1. Метод регистрации пользователя
   Future<Map<String, dynamic>> registerUser(String name, String passportNumber) async {
     try {
-      final response = await _dio.post(
-        '/api/register', // <-- Добавили /api вот сюда!
-        data: {'name': name, 'passportNumber': passportNumber},
-      );
+      final response = await _dio.post('/api/register', data: {'name': name, 'passportNumber': passportNumber});
       return response.data;
     } catch (e) {
       throw Exception('Ошибка регистрации: $e');
@@ -54,7 +41,6 @@ class BankApiService {
     required double amount,
   }) async {
     try {
-      // Вместо print используем developer.log
       developer.log('🚀 ОТПРАВЛЯЕМ ЗАПРОС НА: ${_dio.options.baseUrl}/api/transfer', name: 'BankApi');
 
       final response = await _dio.post(

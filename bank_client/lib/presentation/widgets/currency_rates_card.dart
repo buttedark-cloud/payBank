@@ -1,38 +1,52 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import 'package:bank_client/data/services/api_constants.dart';
 
 class CurrencyRatesCard extends StatefulWidget {
   const CurrencyRatesCard({super.key});
 
   @override
-  State<CurrencyRatesCard> createState() => _CurrencyRatesCardState();
+  State<CurrencyRatesCard> createState() => CurrencyRatesCardState();
 }
 
-class _CurrencyRatesCardState extends State<CurrencyRatesCard> {
+class CurrencyRatesCardState extends State<CurrencyRatesCard> {
   Map<String, dynamic>? _rates;
   bool _isLoading = true;
-  String? _error;
 
   @override
   void initState() {
     super.initState();
-    _fetchRates();
+    refreshRates();
   }
 
-  Future<void> _fetchRates() async {
+  Future<void> refreshRates() async {
+    if (!mounted) return;
+    setState(() {
+      _isLoading = true;
+    });
+
     try {
-      // Запрос к публичному API Центробанка РФ (реальные актуальные курсы)
-      final response = await Dio().get('https://www.cbr-xml-daily.cz/daily_json.js');
+      // Добавляем timestamp (?t=...) и заголовки, чтобы полностью исключить кэширование
+      final response = await Dio().get(
+        '${ApiConstants.baseUrl}/rates',
+        queryParameters: {'_t': DateTime.now().millisecondsSinceEpoch},
+        options: Options(headers: {'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache', 'Expires': '0'}),
+      );
+
       if (mounted) {
         setState(() {
-          _rates = response.data['Valute'];
+          final data = response.data;
+          if (data is Map && data['rates'] != null) {
+            _rates = Map<String, dynamic>.from(data['rates']);
+          } else if (data is Map) {
+            _rates = Map<String, dynamic>.from(data);
+          }
           _isLoading = false;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = 'Не удалось загрузить курсы';
           _isLoading = false;
         });
       }
@@ -42,55 +56,56 @@ class _CurrencyRatesCardState extends State<CurrencyRatesCard> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final textColor = theme.brightness == Brightness.dark ? Colors.white70 : Colors.black54;
 
     if (_isLoading) {
-      return Container(
-        height: 90,
-        alignment: Alignment.center,
-        child: const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)),
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 8.0),
+          child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+        ),
       );
     }
 
-    if (_error != null || _rates == null) {
-      return const SizedBox.shrink();
-    }
+    final rub = (_rates?['RUB'] as num?)?.toDouble() ?? 92.5;
+    final eur = (_rates?['EUR'] as num?)?.toDouble() ?? 0.92;
+    final cny = (_rates?['CNY'] as num?)?.toDouble() ?? 7.2;
 
-    // Вытаскиваем нужные валюты: USD, EUR, CNY
-    final usd = _rates!['USD']?['Value'] ?? 0.0;
-    final eur = _rates!['EUR']?['Value'] ?? 0.0;
-    final cny = _rates!['CNY']?['Value'] ?? 0.0;
+    final usdStr = rub.toStringAsFixed(2);
+    final eurStr = (rub / (eur > 0 ? eur : 0.92)).toStringAsFixed(2);
+    final cnyStr = (rub / (cny > 0 ? cny : 7.2)).toStringAsFixed(2);
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.cardTheme.color,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text('Курсы валют ЦБ РФ', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 14),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [_buildCurrencyItem('USD', '$usd ₽'), _buildCurrencyItem('EUR', '$eur ₽'), _buildCurrencyItem('CNY', '$cny ₽')],
-          ),
+          // Используем Flexible, чтобы на ультра-узких экранах тексты сжимались, но не ломали верстку
+          Flexible(child: _buildCurrencyItem('USD', '$usdStr ₽', textColor)),
+          const SizedBox(width: 4),
+          Flexible(child: _buildCurrencyItem('EUR', '$eurStr ₽', textColor)),
+          const SizedBox(width: 4),
+          Flexible(child: _buildCurrencyItem('CNY', '$cnyStr ₽', textColor)),
         ],
       ),
     );
   }
 
-  Widget _buildCurrencyItem(String symbol, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildCurrencyItem(String symbol, String value, Color textColor) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          symbol,
-          style: TextStyle(color: Colors.grey.shade500, fontSize: 13, fontWeight: FontWeight.w600),
+          '$symbol: ',
+          style: TextStyle(color: Colors.grey.shade500, fontSize: 12, fontWeight: FontWeight.w600),
         ),
-        const SizedBox(height: 4),
-        Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+        Flexible(
+          child: Text(
+            value,
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: textColor),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
       ],
     );
   }

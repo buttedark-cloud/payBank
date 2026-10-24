@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'dart:async'; // Нужно для таймера плашки
+
 import '../../blocs/bank/bank_bloc.dart';
 import 'main_screen.dart';
 
@@ -14,10 +16,61 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final _nameController = TextEditingController();
-  final _cardController = TextEditingController();
+  // Контроллеры полей ввода
+  late final TextEditingController _nameController;
+  late final TextEditingController _phoneController;
 
-  final _cardMask = MaskTextInputFormatter(mask: '####-####-####-####', filter: {"#": RegExp(r'[0-9]')});
+  // Состояние для плашки «сервер просыпается»
+  bool _isServerWakingUp = false;
+  Timer? _wakeUpTimer;
+
+  // Маска для телефона: +7 (999) 123-45-67
+  final _phoneMask = MaskTextInputFormatter(mask: '+7 (###) ###-##-##', filter: {"#": RegExp(r'[0-9]')}, type: MaskAutoCompletionType.lazy);
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController();
+
+    // Безопасная инициализация контроллера телефона с готовой маской
+    final initialText = _phoneMask.formatEditUpdate(TextEditingValue.empty, const TextEditingValue(text: '')).text;
+
+    _phoneController = TextEditingController(text: initialText);
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    _wakeUpTimer?.cancel();
+    super.dispose();
+  }
+
+  // Функция запуска таймера ожидания
+  void _startServerWakeUpTimer() {
+    setState(() {
+      _isServerWakingUp = false;
+    });
+
+    // Если через 5 секунд запрос всё еще идет — показываем красную плашку
+    _wakeUpTimer = Timer(const Duration(seconds: 5), () {
+      if (mounted) {
+        setState(() {
+          _isServerWakingUp = true;
+        });
+      }
+    });
+  }
+
+  // Отмена таймера, когда ответ пришел
+  void _cancelServerWakeUpTimer() {
+    _wakeUpTimer?.cancel();
+    if (mounted && _isServerWakingUp) {
+      setState(() {
+        _isServerWakingUp = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,9 +78,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final isDarkMode = theme.brightness == Brightness.dark;
 
     final logoTextColor = isDarkMode ? Colors.white : const Color(0xFF1A2B42);
-
-    // Бледный цвет только для плейсхолдеров (подсказок)
-    final subtleHintColor = theme.colorScheme.onSurfaceVariant.withOpacity(0.4);
+    final subtleHintColor = theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4);
 
     return Scaffold(
       body: SafeArea(
@@ -42,7 +93,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   children: [
                     const SizedBox(height: 20),
 
-                    // Логотип из ассетов
+                    // Логотип
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -81,47 +132,108 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     // --- ПОЛЕ ФИО ---
                     TextField(
                       controller: _nameController,
+                      maxLength: 100,
                       decoration: InputDecoration(
-                        labelText: 'ФИО', // Заголовок остался на месте
+                        labelText: 'ФИО',
                         hintText: 'Александр Иванов',
-                        hintStyle: TextStyle(color: subtleHintColor, fontSize: 14), // Бледный и мелкий ТОЛЬКО текст-пример
+                        hintStyle: TextStyle(color: subtleHintColor, fontSize: 14),
                       ),
                     ),
                     const SizedBox(height: 20),
 
-                    // --- ПОЛЕ НОМЕРА КАРТЫ ---
+                    // --- ПОЛЕ НОМЕРА ТЕЛЕФОНА ---
                     TextField(
-                      controller: _cardController,
-                      inputFormatters: [_cardMask],
-                      keyboardType: TextInputType.number,
+                      controller: _phoneController,
+                      inputFormatters: [_phoneMask],
+                      keyboardType: TextInputType.phone,
                       decoration: InputDecoration(
-                        labelText: 'Номер карты', // Заголовок на месте
-                        hintText: '4514-1234-5678-1234',
-                        hintStyle: TextStyle(color: subtleHintColor, fontSize: 14), // Бледный и мелкий ТОЛЬКО текст-пример
+                        labelText: 'Номер телефона',
+                        hintText: '+7 (999) 123-45-67',
+                        hintStyle: TextStyle(color: subtleHintColor, fontSize: 14),
                       ),
                     ),
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 24),
 
-                    SizedBox(
-                      height: 55,
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          final name = _nameController.text.trim();
-
-                          final cardNumber = _cardController.text.replaceAll('-', '').trim();
-
-                          if (name.isNotEmpty && cardNumber.length == 16) {
-                            context.read<BankBloc>().add(
-                              RegisterUserEvent(name: name, passportNumber: '1234567890', cardNumber: cardNumber),
-                            );
-                          } else {
-                            ScaffoldMessenger.of(context)
-                                .showSnackBar(const SnackBar(content: Text('Введите ФИО и корректный номер карты (16 цифр)')));
-                          }
-                        },
-                        child: const Text('Создать аккаунт'),
+                    // --- КРАСНАЯ ПЛАШКА «СЕРВЕР ПРОСЫПАЕТСЯ» ---
+                    if (_isServerWakingUp)
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.red.withValues(alpha: 0.4)),
+                        ),
+                        child: Row(
+                          children: const [
+                            Expanded(
+                              child: Text(
+                                'Идет подготовка данных, загрузка может занять до 30 секунд, пожалуйста, подождите...',
+                                style: TextStyle(color: Colors.redAccent, fontSize: 12),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
+
+                    BlocConsumer<BankBloc, BankState>(
+                      listener: (context, state) {
+                        if (state is! BankLoading) {
+                          // Если загрузка закончилась (успех или ошибка) — гасим таймер и плашку
+                          _cancelServerWakeUpTimer();
+                        }
+
+                        if (state is BankAccountSuccess) {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => MainScreen(
+                                user: {'name': _nameController.text.trim()},
+                                account: state.accountData['account'] ?? {'phone': _phoneMask.getUnmaskedText(), 'balance': 5000.0},
+                              ),
+                            ),
+                          );
+                        } else if (state is BankError) {
+                          ScaffoldMessenger.of(context)
+                              .showSnackBar(SnackBar(content: Text(state.message), backgroundColor: Colors.redAccent));
+                        }
+                      },
+                      builder: (context, state) {
+                        final isLoading = state is BankLoading;
+
+                        return SizedBox(
+                          height: 55,
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: isLoading
+                                ? null
+                                : () {
+                                    final name = _nameController.text.trim();
+                                    final unmaskedPhone = _phoneMask.getUnmaskedText();
+                                    final phoneForApi = '+7$unmaskedPhone';
+
+                                    if (name.isNotEmpty && unmaskedPhone.length == 10) {
+                                      // Запускаем таймер пятисекундного ожидания сервера
+                                      _startServerWakeUpTimer();
+
+                                      context.read<BankBloc>().add(
+                                        RegisterUserEvent(name: name, passportNumber: '1234567890', cardNumber: phoneForApi),
+                                      );
+                                    } else {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(const SnackBar(content: Text('Введите ФИО и корректный номер телефона (+7...)')));
+                                    }
+                                  },
+                            child: isLoading
+                                ? const SizedBox(
+                                    height: 24,
+                                    width: 24,
+                                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                                  )
+                                : const Text('Создать аккаунт', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                          ),
+                        );
+                      },
                     ),
 
                     const Spacer(),
@@ -140,25 +252,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           child: const Text('Войти', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                         ),
                       ],
-                    ),
-
-                    BlocListener<BankBloc, BankState>(
-                      listener: (context, state) {
-                        if (state is BankAccountSuccess) {
-                          final userData = state.accountData['user'] ?? {'name': _nameController.text};
-                          final accountData = state.accountData['account'] ?? state.accountData;
-
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => MainScreen(user: userData, account: accountData),
-                            ),
-                          );
-                        } else if (state is BankError) {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message), backgroundColor: Colors.red));
-                        }
-                      },
-                      child: const SizedBox.shrink(),
                     ),
                   ],
                 ),
