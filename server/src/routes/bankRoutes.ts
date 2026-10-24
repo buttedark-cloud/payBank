@@ -4,21 +4,19 @@ import axios from 'axios';
 
 const router = Router();
 
-// 1. Регистрация / проверка паспорта
-// Эндпоинт: POST /api/register
+// 1. Регистрация (теперь принимаем телефон в поле cardNumber / phone и генерируем карту)
 router.post('/register', (req: Request, res: Response) => {
-    const { name, passportNumber } = req.body;
+    const { name, cardNumber } = req.body; // cardNumber здесь выступает переданным номером телефона
 
-    // Проверяем, прислал ли Flutter данные
-    if (!name || !passportNumber) {
+    if (!name || !cardNumber) {
         return res.status(400).json({
             success: false,
-            message: 'Укажите имя и номер паспорта',
+            message: 'Укажите имя и номер телефона',
         });
     }
 
-    // Проверяем, есть ли уже такой пользователь
-    const existingUser = db.users.find((u) => u.passportNumber === passportNumber);
+    // Проверяем, есть ли пользователь с таким телефоном
+    const existingUser = db.users.find((u) => u.phone === cardNumber || u.cardNumber === cardNumber);
 
     if (existingUser) {
         return res.json({
@@ -28,19 +26,17 @@ router.post('/register', (req: Request, res: Response) => {
         });
     }
 
-    // Если пользователя нет — генерируем ему новый счет и карту
+    // Генерируем реальный банковский счет и карту для переводов
     const newAccount: UserAccount = {
-        id: String(Date.now()), // уникальный id на основе времени
+        id: String(Date.now()),
         name,
-        passportNumber,
-        balance: 5000.0, // Дарим стартовый бонус при регистрации!
+        phone: cardNumber, // сохраняем телефон
+        balance: 5000.0,
         cardNumber: `4400-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}`,
     };
 
-    // Сохраняем пользователя в нашу базу данных (массив)
     db.users.push(newAccount);
 
-    // Отправляем ответ обратно во Flutter
     return res.status(201).json({
         success: true,
         message: 'Заявка одобрена! Счет успешно создан.',
@@ -48,8 +44,7 @@ router.post('/register', (req: Request, res: Response) => {
     });
 });
 
-// 2. Получение данных аккаунта по номеру карты
-// Эндпоинт: GET /api/account/:cardNumber
+// 2. Получение аккаунта по номеру карты
 router.get('/account/:cardNumber', (req: Request, res: Response) => {
     const { cardNumber } = req.params;
 
@@ -68,17 +63,14 @@ router.get('/account/:cardNumber', (req: Request, res: Response) => {
     });
 });
 
-// 3. Получение курсов валют через внешний API (используем axios)
-// Эндпоинт: GET /api/rates
+// 3. Курсы валют
 router.get('/rates', async (req: Request, res: Response) => {
     try {
-        // Делаем запрос к бесплатному публичному API курсов валют
         const response = await axios.get('https://open.er-api.com/v6/latest/USD');
-
         return res.json({
             success: true,
             base: response.data.base_code,
-            rates: response.data.rates, // Курсы валют относительно USD
+            rates: response.data.rates,
             date: response.data.time_last_update_utc,
         });
     } catch (error) {
@@ -90,12 +82,10 @@ router.get('/rates', async (req: Request, res: Response) => {
     }
 });
 
-// 4. Перевод средств с карты на карту
-// Эндпоинт: POST /api/transfer
+// 4. Переводы СТРОГО по номерам карт
 router.post('/transfer', (req: Request, res: Response) => {
     const { senderCardNumber, recipientCardNumber, amount } = req.body;
 
-    // Проверяем, все ли данные переданы
     if (!senderCardNumber || !recipientCardNumber || !amount) {
         return res.status(400).json({
             success: false,
@@ -103,7 +93,6 @@ router.post('/transfer', (req: Request, res: Response) => {
         });
     }
 
-    // Сумма должна быть больше нуля
     const transferAmount = Number(amount);
     if (isNaN(transferAmount) || transferAmount < 100) {
         return res.status(400).json({
@@ -112,7 +101,6 @@ router.post('/transfer', (req: Request, res: Response) => {
         });
     }
 
-    // Ищем отправителя в нашей базе
     const sender = db.users.find((u) => u.cardNumber === senderCardNumber);
     if (!sender) {
         return res.status(404).json({
@@ -121,7 +109,6 @@ router.post('/transfer', (req: Request, res: Response) => {
         });
     }
 
-    // Проверяем, достаточно ли денег на балансе
     if (sender.balance < transferAmount) {
         return res.status(400).json({
             success: false,
@@ -129,7 +116,6 @@ router.post('/transfer', (req: Request, res: Response) => {
         });
     }
 
-    // Ищем получателя
     const recipient = db.users.find((u) => u.cardNumber === recipientCardNumber);
     if (!recipient) {
         return res.status(404).json({
@@ -138,7 +124,6 @@ router.post('/transfer', (req: Request, res: Response) => {
         });
     }
 
-    // Выполняем транзакцию: списываем у одного, добавляем другому
     sender.balance -= transferAmount;
     recipient.balance += transferAmount;
 
