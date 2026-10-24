@@ -1,0 +1,30 @@
+name: Node.js CI # Имя вашего робота
+
+on:
+  push:
+    branches: [ "main" ] # Запускать робота при пуше в ветку main
+  pull_request:
+    branches: [ "main" ] # и при создании пулл-реквестов
+
+jobs:
+  build:
+    runs-on: ubuntu-latest # Робот будет запускаться на виртуальном сервере Linux
+
+    steps:
+    - name: Проверяем код репозитория
+      uses: actions/checkout@v4
+
+    - name: Устанавливаем Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+
+    - name: Устанавливаем зависимости бэкенда
+      run: |
+        cd server
+        npm ci
+
+    - name: Проверяем сборку / компиляцию TypeScript
+      run: |
+        cd server
+        npm run build
