@@ -7,7 +7,6 @@
 
 ![PayBank](docs/preview.png)
 
-(https://github.com/USER/REPO/actions)
 
 **Сервер:** https://paybank-ki76.onrender.com
 
