@@ -7,7 +7,6 @@ You sign up with a name and a phone number, get a card with a 5,000 ₽ welcome 
 
 ![PayBank](docs/preview.png)
 
-[![CI](https://github.com/USER/REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/USER/REPO/actions)
 
 **Backend:** https://paybank-ki76.onrender.com
 
@@ -87,4 +86,4 @@ This is a learning project, and I know where it falls short of a real bank:
 
 ## Author
 
-YOUR NAME, [GitHub](https://github.com/USER) · [Telegram](https://t.me/USERNAME)
+Veronica, [GitHub](https://github.com/buttedark-cloud) · [LinkedIn](https://www.linkedin.com/in/veronikamalinovskaya)
