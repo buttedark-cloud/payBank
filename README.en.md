@@ -8,6 +8,11 @@ You sign up with a name and a phone number, get a card with a 5,000 ₽ welcome 
 ![PayBank](docs/preview.png)
 
 
+
+https://github.com/user-attachments/assets/8e486454-8f58-4cfa-a3e7-4072815f4ad4
+
+
+
 **Backend:** https://paybank-ki76.onrender.com
 
 > The server runs on Render's free tier and goes to sleep when nobody uses it. The first request can take 30–60 seconds, after that everything is fast. The app shows a "preparing data" banner for this case.
