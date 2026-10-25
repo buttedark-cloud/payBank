@@ -9,7 +9,6 @@ You sign up with a name and a phone number, get a card with a 5,000 ₽ welcome 
 
 [![CI](https://github.com/USER/REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/USER/REPO/actions)
 
-**Download the APK:** [latest release](https://github.com/USER/REPO/releases/latest)
 **Backend:** https://paybank-ki76.onrender.com
 
 > The server runs on Render's free tier and goes to sleep when nobody uses it. The first request can take 30–60 seconds, after that everything is fast. The app shows a "preparing data" banner for this case.
@@ -22,6 +21,15 @@ You sign up with a name and a phone number, get a card with a 5,000 ₽ welcome 
 - Transfers by card number: 100 ₽ minimum, balance check, recipient card check
 - USD / EUR / CNY to RUB rates, pull down to refresh
 - Light and dark theme, toggle in the header
+
+## What this project shows
+
+It's a learning project, and I used it to practice connecting a client and a server:
+
+- **BLoC**: events, states (loading, success, error) and a separate layer for API calls
+- **Dio**: requests to my own server, timeouts, error handling
+- **My own REST server** in Express + TypeScript: registration, accounts, transfers, exchange rates
+- **CI** with GitHub Actions and automatic deploys to Render
 
 ## Tech stack
 
