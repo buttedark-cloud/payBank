@@ -86,4 +86,4 @@ flutter run
 
 ## Автор
 
-ТВОЁ ИМЯ, [GitHub](https://github.com/USER) · [Telegram](https://t.me/USERNAME)
+Veronica, [GitHub](https://github.com/buttedark-cloud) · [LinkedIn](https://www.linkedin.com/in/veronikamalinovskaya)
