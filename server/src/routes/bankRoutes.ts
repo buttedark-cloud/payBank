@@ -127,6 +127,18 @@ router.post('/transfer', (req: Request, res: Response) => {
 
     const recipient = db.users.find((u) => u.cardNumber === recipientCardNumber);
     if (!recipient) {
+        // Номер в формате ####-####-####-#### считаем картой другого банка:
+        // деньги списываются у отправителя, перевод проходит
+        if (/^\d{4}-\d{4}-\d{4}-\d{4}$/.test(recipientCardNumber)) {
+            sender.balance -= transferAmount;
+            res.json({
+                success: true,
+                message: 'Перевод на карту другого банка выполнен!',
+                senderNewBalance: sender.balance,
+            });
+            return;
+        }
+
         res.status(404).json({
             success: false,
             message: 'Карта получателя не найдена',

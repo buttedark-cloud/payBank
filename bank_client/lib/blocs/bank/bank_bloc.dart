@@ -9,6 +9,9 @@ part 'bank_state.dart';
 class BankBloc extends Bloc<BankEvent, BankState> {
   final BankApiService _apiService;
 
+  // Убираем слово 'Exception:' из текста ошибки
+  String _clean(Object e) => e.toString().replaceFirst('Exception: ', '');
+
   // Обязательный конструктор, который мы случайно затерли!
   BankBloc(this._apiService) : super(BankInitial()) {
     // 1. Обработка события регистрации
@@ -18,7 +21,7 @@ class BankBloc extends Bloc<BankEvent, BankState> {
         final result = await _apiService.registerUser(event.name, event.passportNumber);
         emit(BankAccountSuccess(result)); // Успех! Передаем данные
       } catch (e) {
-        emit(const BankError('Ошибка регистрации. Возможно, этот номер уже зарегистрирован.'));
+        emit(BankError(_clean(e)));
       }
     });
 
@@ -29,7 +32,7 @@ class BankBloc extends Bloc<BankEvent, BankState> {
         final result = await _apiService.getAccount(event.cardNumber);
         emit(BankAccountSuccess(result));
       } catch (e) {
-        emit(BankError(e.toString()));
+        emit(BankError(_clean(e)));
       }
     });
 
@@ -44,7 +47,7 @@ class BankBloc extends Bloc<BankEvent, BankState> {
         );
         emit(BankTransferSuccess(result)); // Успешный перевод
       } catch (e) {
-        emit(BankError(e.toString()));
+        emit(BankError(_clean(e)));
       }
     });
   }

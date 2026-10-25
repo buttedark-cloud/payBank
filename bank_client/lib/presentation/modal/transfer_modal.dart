@@ -112,6 +112,7 @@ void showTransferModal({
                         return;
                       }
 
+                      // Сообщаем экрану, что отправили (баланс он обновит после ответа сервера)
                       onTransferSuccess(amount, recipient);
 
                       context.read<BankBloc>().add(
@@ -119,8 +120,6 @@ void showTransferModal({
                       );
 
                       Navigator.pop(modalContext);
-                      ScaffoldMessenger.of(context)
-                          .showSnackBar(const SnackBar(content: Text('Перевод успешно выполнен!'), backgroundColor: Colors.green));
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blueAccent,

@@ -14,13 +14,25 @@ class BankApiService {
     );
   }
 
+  // Достаёт понятное сообщение: ответ сервера или текст про связь
+  String _errorMessage(Object e, String fallback) {
+    if (e is DioException) {
+      final data = e.response?.data;
+      if (data is Map && data['message'] != null) {
+        return data['message'].toString();
+      }
+      return 'Нет связи с сервером. Попробуйте ещё раз';
+    }
+    return fallback;
+  }
+
   // 1. Метод регистрации пользователя
   Future<Map<String, dynamic>> registerUser(String name, String passportNumber) async {
     try {
       final response = await _dio.post('/api/register', data: {'name': name, 'passportNumber': passportNumber});
       return response.data;
     } catch (e) {
-      throw Exception('Ошибка регистрации: $e');
+      throw Exception(_errorMessage(e, 'Ошибка регистрации'));
     }
   }
 
@@ -30,7 +42,7 @@ class BankApiService {
       final response = await _dio.get('/api/account/$cardNumber');
       return response.data;
     } catch (e) {
-      throw Exception('Ошибка получения аккаунта: $e');
+      throw Exception(_errorMessage(e, 'Ошибка получения аккаунта'));
     }
   }
 
@@ -50,7 +62,7 @@ class BankApiService {
       return response.data;
     } catch (e) {
       developer.log('❌ ОШИБКА ДИО: $e', name: 'BankApi', error: e);
-      throw Exception('Ошибка перевода: $e');
+      throw Exception(_errorMessage(e, 'Ошибка перевода'));
     }
   }
 }
