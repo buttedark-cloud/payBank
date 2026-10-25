@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
+import 'package:bank_client/utils/money.dart';
 
 import '../../blocs/bank/bank_bloc.dart';
 
 void showTransferModal({
   required BuildContext context,
   required String senderCard,
-  required double currentBalance,
+  required int currentBalance,
   required bool isDarkMode,
-  required Function(double amount, String recipient) onTransferSuccess,
+  required Function(int amount, String recipient) onTransferSuccess,
 }) {
   final recipientController = TextEditingController();
   final amountController = TextEditingController();
@@ -73,10 +74,10 @@ void showTransferModal({
                 const SizedBox(height: 6),
                 TextField(
                   controller: amountController,
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   style: TextStyle(color: isDarkMode ? Colors.white : Colors.black87, fontSize: 16),
                   decoration: InputDecoration(
-                    hintText: '100',
+                    hintText: '100.00',
                     hintStyle: TextStyle(color: Colors.grey.withValues(alpha: 0.5)),
                     filled: true,
                     fillColor: isDarkMode ? const Color(0xFF0D1117) : Colors.grey[200],
@@ -89,7 +90,7 @@ void showTransferModal({
                   child: ElevatedButton(
                     onPressed: () {
                       final recipient = recipientController.text.trim();
-                      final amount = double.tryParse(amountController.text) ?? 0;
+                      final amount = rublesToKopecks(amountController.text) ?? 0;
 
                       if (recipient.isEmpty || recipient.length < 19) {
                         setModalState(() {
@@ -98,7 +99,7 @@ void showTransferModal({
                         return;
                       }
 
-                      if (amount < 100) {
+                      if (amount < 10000) {
                         setModalState(() {
                           inlineError = 'Минимальная сумма перевода — 100 ₽!';
                         });

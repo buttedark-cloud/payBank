@@ -15,22 +15,22 @@ class BankLoading extends BankState {}
 
 // 3. Состояние успешной регистрации или получения счета
 class BankAccountSuccess extends BankState {
-  final Map<String, dynamic> accountData;
+  final Account account;
 
-  const BankAccountSuccess(this.accountData);
+  const BankAccountSuccess(this.account);
 
   @override
-  List<Object?> get props => [accountData];
+  List<Object?> get props => [account];
 }
 
 // 4. Состояние успешного перевода денег
 class BankTransferSuccess extends BankState {
-  final Map<String, dynamic> transferData;
+  final TransferResult result;
 
-  const BankTransferSuccess(this.transferData);
+  const BankTransferSuccess(this.result);
 
   @override
-  List<Object?> get props => [transferData];
+  List<Object?> get props => [result];
 }
 
 // 5. Состояние ошибки (если сервер упал или ввели неверные данные)

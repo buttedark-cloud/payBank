@@ -37,7 +37,7 @@ class GetAccountEvent extends BankEvent {
 class TransferMoneyEvent extends BankEvent {
   final String senderCardNumber;
   final String recipientCardNumber;
-  final double amount;
+  final int amount;
 
   const TransferMoneyEvent({required this.senderCardNumber, required this.recipientCardNumber, required this.amount});
 

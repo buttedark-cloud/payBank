@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:bank_client/utils/money.dart';
 
 class BalanceWidget extends StatelessWidget {
-  final double balance;
+  final int balance;
   final bool isDarkMode;
 
   const BalanceWidget({super.key, required this.balance, required this.isDarkMode});
@@ -17,7 +18,7 @@ class BalanceWidget extends StatelessWidget {
         Text('Баланс', style: TextStyle(color: subTextColor, fontSize: 14)),
         const SizedBox(height: 4),
         Text(
-          '${balance.toStringAsFixed(2)} ₽',
+          '${formatKopecks(balance)} ₽',
           style: TextStyle(color: mainTextColor, fontSize: 32, fontWeight: FontWeight.bold),
         ),
       ],

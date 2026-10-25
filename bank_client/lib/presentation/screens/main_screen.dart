@@ -1,56 +1,46 @@
 import 'package:bank_client/presentation/modal/transfer_modal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bank_client/data/models/account.dart';
+import 'package:bank_client/data/models/transaction_item.dart';
 import 'package:bank_client/blocs/bank/bank_bloc.dart';
 import 'package:bank_client/presentation/widgets/widgets.dart'; // Убедись, что путь к виджету курсов правильный
 
 class MainScreen extends StatefulWidget {
-  final Map<String, dynamic> user;
-  final Map<String, dynamic> account;
+  final Account account;
 
-  const MainScreen({
-    super.key,
-    this.user = const {'name': 'Сергей Панин'},
-    this.account = const {'cardNumber': '4400-3201-7165-4352', 'balance': 5000.0},
-  });
+  const MainScreen({super.key, required this.account});
 
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
 
 class _MainScreenState extends State<MainScreen> {
-  late double currentBalance;
+  late int currentBalance;
   int _currentIndex = 0;
 
   // Данные последнего отправленного перевода (баланс обновим после ответа сервера)
-  double? _pendingAmount;
+  int? _pendingAmount;
   String? _pendingRecipient;
 
   // Ключ для принудительного обновления курсов валют извне
   final GlobalKey<CurrencyRatesCardState> _ratesKey = GlobalKey();
 
-  final List<Map<String, dynamic>> transactions = [
-    {
-      'icon': Icons.account_balance,
-      'color': Colors.greenAccent,
-      'title': "Приветственный бонус",
-      'date': "При регистрации",
-      'amount': "+5,000.00 ₽",
-      'isNegative': false,
-    },
+  final List<TransactionItem> transactions = [
+    const TransactionItem(title: 'Приветственный бонус', date: 'При регистрации', amount: 500000, isNegative: false),
   ];
 
   @override
   void initState() {
     super.initState();
-    currentBalance = double.tryParse(widget.account['balance'].toString()) ?? 5000.0;
+    currentBalance = widget.account.balance;
   }
 
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final userName = widget.user['name'] ?? 'Сергей Панин';
-    final cardNumber = widget.account['cardNumber'] ?? '4400-3201-7165-4352';
+    final userName = widget.account.name;
+    final cardNumber = widget.account.cardNumber;
 
     final cardBgColor = isDarkMode ? const Color(0xFF161B22) : Colors.white;
     final mainTextColor = isDarkMode ? Colors.white : Colors.black87;
@@ -60,17 +50,12 @@ class _MainScreenState extends State<MainScreen> {
       listener: (context, state) {
         if (state is BankTransferSuccess) {
           final amount = _pendingAmount ?? 0;
-          final newBalance = (state.transferData['senderNewBalance'] as num?)?.toDouble() ?? (currentBalance - amount);
           setState(() {
-            currentBalance = newBalance;
-            transactions.insert(0, {
-              'icon': Icons.arrow_outward,
-              'color': Colors.blueAccent,
-              'title': 'Перевод на карту ${_pendingRecipient ?? ''}',
-              'date': 'Только что',
-              'amount': '-${amount.toStringAsFixed(2)} ₽',
-              'isNegative': true,
-            });
+            currentBalance = state.result.senderNewBalance;
+            transactions.insert(
+              0,
+              TransactionItem(title: 'Перевод на карту ${_pendingRecipient ?? ''}', date: 'Только что', amount: amount, isNegative: true),
+            );
           });
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Перевод выполнен'), backgroundColor: Colors.green));
         } else if (state is BankError) {

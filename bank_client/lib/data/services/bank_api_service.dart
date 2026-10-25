@@ -3,6 +3,8 @@ import 'package:dio/dio.dart';
 import 'dart:async';
 import 'dart:developer' as developer;
 
+import 'package:bank_client/data/models/account.dart';
+import 'package:bank_client/data/models/transfer_result.dart';
 import 'package:bank_client/data/services/api_constants.dart';
 
 class BankApiService {
@@ -27,31 +29,27 @@ class BankApiService {
   }
 
   // 1. Метод регистрации пользователя
-  Future<Map<String, dynamic>> registerUser(String name, String passportNumber) async {
+  Future<Account> registerUser(String name, String passportNumber) async {
     try {
       final response = await _dio.post('/api/register', data: {'name': name, 'passportNumber': passportNumber});
-      return response.data;
+      return Account.fromJson(response.data['account']);
     } catch (e) {
       throw Exception(_errorMessage(e, 'Ошибка регистрации'));
     }
   }
 
   // 2. Метод получения данных карты/аккаунта
-  Future<Map<String, dynamic>> getAccount(String cardNumber) async {
+  Future<Account> getAccount(String cardNumber) async {
     try {
       final response = await _dio.get('/api/account/$cardNumber');
-      return response.data;
+      return Account.fromJson(response.data['account']);
     } catch (e) {
       throw Exception(_errorMessage(e, 'Ошибка получения аккаунта'));
     }
   }
 
   // 3. Метод перевода денег
-  Future<Map<String, dynamic>> transferMoney({
-    required String senderCardNumber,
-    required String recipientCardNumber,
-    required double amount,
-  }) async {
+  Future<TransferResult> transferMoney({required String senderCardNumber, required String recipientCardNumber, required int amount}) async {
     try {
       developer.log('🚀 ОТПРАВЛЯЕМ ЗАПРОС НА: ${_dio.options.baseUrl}/api/transfer', name: 'BankApi');
 
@@ -59,7 +57,7 @@ class BankApiService {
         '/api/transfer',
         data: {'senderCardNumber': senderCardNumber, 'recipientCardNumber': recipientCardNumber, 'amount': amount},
       );
-      return response.data;
+      return TransferResult.fromJson(response.data);
     } catch (e) {
       developer.log('❌ ОШИБКА ДИО: $e', name: 'BankApi', error: e);
       throw Exception(_errorMessage(e, 'Ошибка перевода'));

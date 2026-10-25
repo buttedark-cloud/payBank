@@ -6,7 +6,6 @@ import 'dart:async'; // Нужно для таймера плашки
 
 import '../../blocs/bank/bank_bloc.dart';
 import 'main_screen.dart';
-
 import 'package:bank_client/presentation/widgets/widgets.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -139,10 +138,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => MainScreen(
-                                user: {'name': _nameController.text.trim()},
-                                account: state.accountData['account'] ?? {'phone': _phoneMask.getUnmaskedText(), 'balance': 5000.0},
-                              ),
+                              builder: (context) => MainScreen(account: state.account),
                             ),
                           );
                         } else if (state is BankError) {

@@ -35,7 +35,7 @@ router.post('/register', (req: Request, res: Response) => {
         id: String(Date.now()),
         name,
         phone: userPhone,
-        balance: 5000.0,
+        balance: 500000, // 5000 ₽ в копейках
         cardNumber: `4400-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}`,
     };
 
@@ -100,10 +100,10 @@ router.post('/transfer', (req: Request, res: Response) => {
     }
 
     const transferAmount = Number(amount);
-    if (isNaN(transferAmount) || transferAmount < 100) {
+    if (!Number.isInteger(transferAmount) || transferAmount < 10000) {
         res.status(400).json({
             success: false,
-            message: 'Минимальная сумма перевода — 100',
+            message: 'Минимальная сумма перевода — 100 ₽',
         });
         return;
     }

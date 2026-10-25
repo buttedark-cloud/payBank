@@ -1,3 +1,5 @@
+import 'package:bank_client/data/models/account.dart';
+import 'package:bank_client/data/models/transfer_result.dart';
 import 'package:bank_client/data/services/bank_api_service.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
