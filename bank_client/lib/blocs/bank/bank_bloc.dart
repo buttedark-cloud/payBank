@@ -9,6 +9,7 @@ part 'bank_state.dart';
 class BankBloc extends Bloc<BankEvent, BankState> {
   final BankApiService _apiService;
 
+  // Обязательный конструктор, который мы случайно затерли!
   BankBloc(this._apiService) : super(BankInitial()) {
     // 1. Обработка события регистрации
     on<RegisterUserEvent>((event, emit) async {
@@ -17,7 +18,7 @@ class BankBloc extends Bloc<BankEvent, BankState> {
         final result = await _apiService.registerUser(event.name, event.passportNumber);
         emit(BankAccountSuccess(result)); // Успех! Передаем данные
       } catch (e) {
-        emit(BankError(e.toString())); // Ошибка
+        emit(const BankError('Ошибка регистрации. Возможно, этот номер уже зарегистрирован.'));
       }
     });
 

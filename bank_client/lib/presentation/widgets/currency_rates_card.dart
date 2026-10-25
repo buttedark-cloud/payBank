@@ -28,7 +28,7 @@ class CurrencyRatesCardState extends State<CurrencyRatesCard> {
     try {
       // Добавляем timestamp (?t=...) и заголовки, чтобы полностью исключить кэширование
       final response = await Dio().get(
-        '${ApiConstants.baseUrl}/rates',
+        '${ApiConstants.baseUrl}/api/rates',
         queryParameters: {'_t': DateTime.now().millisecondsSinceEpoch},
         options: Options(headers: {'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache', 'Expires': '0'}),
       );

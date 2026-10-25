@@ -217,7 +217,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       _startServerWakeUpTimer();
 
                                       context.read<BankBloc>().add(
-                                        RegisterUserEvent(name: name, passportNumber: '1234567890', cardNumber: phoneForApi),
+                                        RegisterUserEvent(
+                                          name: name,
+                                          passportNumber: phoneForApi, // Используем телефон как паспорт/уникальный ID
+                                          cardNumber: phoneForApi, // Передаем его же, чтобы компилятор не ругался на отсутствие параметра
+                                        ),
                                       );
                                     } else {
                                       ScaffoldMessenger.of(context)

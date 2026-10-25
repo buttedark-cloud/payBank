@@ -4,40 +4,44 @@ import axios from 'axios';
 
 const router = Router();
 
-// 1. Регистрация (теперь принимаем телефон в поле cardNumber / phone и генерируем карту)
+// 1. Регистрация: принимаем имя и телефон, генерируем карту
 router.post('/register', (req: Request, res: Response) => {
-    const { name, cardNumber } = req.body; // cardNumber здесь выступает переданным номером телефона
+    const { name, phone, passportNumber, cardNumber } = req.body;
+    // Клиент сейчас шлёт телефон в passportNumber, поэтому берём любое из полей
+    const userPhone = phone ?? passportNumber ?? cardNumber;
 
-    if (!name || !cardNumber) {
-        return res.status(400).json({
+    if (!name || !userPhone) {
+        res.status(400).json({
             success: false,
             message: 'Укажите имя и номер телефона',
         });
+        return;
     }
 
     // Проверяем, есть ли пользователь с таким телефоном
-    const existingUser = db.users.find((u) => u.phone === cardNumber || u.cardNumber === cardNumber);
+    const existingUser = db.users.find((u) => u.phone === userPhone);
 
     if (existingUser) {
-        return res.json({
+        res.json({
             success: true,
             message: 'Пользователь уже зарегистрирован!',
             account: existingUser,
         });
+        return;
     }
 
-    // Генерируем реальный банковский счет и карту для переводов
+    // Генерируем счёт и карту для переводов
     const newAccount: UserAccount = {
         id: String(Date.now()),
         name,
-        phone: cardNumber, // сохраняем телефон
+        phone: userPhone,
         balance: 5000.0,
         cardNumber: `4400-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}`,
     };
 
     db.users.push(newAccount);
 
-    return res.status(201).json({
+    res.status(201).json({
         success: true,
         message: 'Заявка одобрена! Счет успешно создан.',
         account: newAccount,
@@ -51,13 +55,14 @@ router.get('/account/:cardNumber', (req: Request, res: Response) => {
     const account = db.users.find((u) => u.cardNumber === cardNumber);
 
     if (!account) {
-        return res.status(404).json({
+        res.status(404).json({
             success: false,
             message: 'Счет с таким номером карты не найден',
         });
+        return;
     }
 
-    return res.json({
+    res.json({
         success: true,
         account,
     });
@@ -67,7 +72,7 @@ router.get('/account/:cardNumber', (req: Request, res: Response) => {
 router.get('/rates', async (req: Request, res: Response) => {
     try {
         const response = await axios.get('https://open.er-api.com/v6/latest/USD');
-        return res.json({
+        res.json({
             success: true,
             base: response.data.base_code,
             rates: response.data.rates,
@@ -75,7 +80,7 @@ router.get('/rates', async (req: Request, res: Response) => {
         });
     } catch (error) {
         console.error('Ошибка при получении курсов валют:', error);
-        return res.status(500).json({
+        res.status(500).json({
             success: false,
             message: 'Не удалось получить курсы валют',
         });
@@ -87,47 +92,52 @@ router.post('/transfer', (req: Request, res: Response) => {
     const { senderCardNumber, recipientCardNumber, amount } = req.body;
 
     if (!senderCardNumber || !recipientCardNumber || !amount) {
-        return res.status(400).json({
+        res.status(400).json({
             success: false,
             message: 'Укажите карту отправителя, карту получателя и сумму перевода',
         });
+        return;
     }
 
     const transferAmount = Number(amount);
     if (isNaN(transferAmount) || transferAmount < 100) {
-        return res.status(400).json({
+        res.status(400).json({
             success: false,
-            message: 'Некорректная сумма перевода, она должна быть больше 100',
+            message: 'Минимальная сумма перевода — 100',
         });
+        return;
     }
 
     const sender = db.users.find((u) => u.cardNumber === senderCardNumber);
     if (!sender) {
-        return res.status(404).json({
+        res.status(404).json({
             success: false,
             message: 'Счет отправителя не найден',
         });
+        return;
     }
 
     if (sender.balance < transferAmount) {
-        return res.status(400).json({
+        res.status(400).json({
             success: false,
             message: 'Недостаточно средств на балансе',
         });
+        return;
     }
 
     const recipient = db.users.find((u) => u.cardNumber === recipientCardNumber);
     if (!recipient) {
-        return res.status(404).json({
+        res.status(404).json({
             success: false,
             message: 'Карта получателя не найдена',
         });
+        return;
     }
 
     sender.balance -= transferAmount;
     recipient.balance += transferAmount;
 
-    return res.json({
+    res.json({
         success: true,
         message: 'Перевод успешно выполнен!',
         senderNewBalance: sender.balance,
