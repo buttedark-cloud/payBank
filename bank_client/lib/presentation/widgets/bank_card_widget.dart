@@ -55,8 +55,8 @@ class BankCardWidget extends StatelessWidget {
                   style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontStyle: FontStyle.italic, fontSize: 16),
                 ),
                 // Иконка бесконтактной оплаты (NFC) из сети
-                Image.network(
-                  'https://images.icon-icons.com/2248/PNG/512/contactless_payment_icon_136735.png',
+                Image.asset(
+                  'assets/images/contactless.png',
                   width: 25,
                   height: 25,
                   color: mainTextColor,

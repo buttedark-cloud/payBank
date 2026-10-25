@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'dart:async'; // Нужно для таймера плашки
 
 import '../../blocs/bank/bank_bloc.dart';
 import 'main_screen.dart';
+
+import 'package:bank_client/presentation/widgets/widgets.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -75,9 +76,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
 
-    final logoTextColor = isDarkMode ? Colors.white : const Color(0xFF1A2B42);
     final subtleHintColor = theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4);
 
     return Scaffold(
@@ -93,35 +92,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   children: [
                     const SizedBox(height: 20),
 
-                    // Логотип
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Transform.translate(
-                          offset: const Offset(2, 0),
-                          child: Image.asset(
-                            'assets/images/app_logo.png',
-                            width: 60,
-                            height: 60,
-                            errorBuilder: (context, error, stackTrace) => Container(
-                              width: 60,
-                              height: 60,
-                              decoration: BoxDecoration(color: theme.primaryColor, borderRadius: BorderRadius.circular(12)),
-                              child: const Icon(Icons.account_balance_wallet, color: Colors.white),
-                            ),
-                          ),
-                        ),
-                        Text(
-                          'PayBank',
-                          style: GoogleFonts.playfairDisplay(
-                            fontSize: 40,
-                            fontWeight: FontWeight.w600,
-                            fontStyle: FontStyle.italic,
-                            color: logoTextColor,
-                          ),
-                        ),
-                      ],
-                    ),
+                    const RegisterLogo(),
                     const SizedBox(height: 40),
 
                     Text('Регистрация', style: theme.textTheme.displayLarge),
@@ -154,27 +125,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: 24),
 
-                    // --- КРАСНАЯ ПЛАШКА «СЕРВЕР ПРОСЫПАЕТСЯ» ---
-                    if (_isServerWakingUp)
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        margin: const EdgeInsets.only(bottom: 16),
-                        decoration: BoxDecoration(
-                          color: Colors.red.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.red.withValues(alpha: 0.4)),
-                        ),
-                        child: Row(
-                          children: const [
-                            Expanded(
-                              child: Text(
-                                'Идет подготовка данных, загрузка может занять до 30 секунд, пожалуйста, подождите...',
-                                style: TextStyle(color: Colors.redAccent, fontSize: 12),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                    // Плашка «сервер просыпается»
+                    if (_isServerWakingUp) const ServerWakeUpBanner(),
 
                     BlocConsumer<BankBloc, BankState>(
                       listener: (context, state) {

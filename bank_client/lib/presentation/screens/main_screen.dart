@@ -21,8 +21,6 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   late double currentBalance;
   int _currentIndex = 0;
-  final PageController _pageController = PageController();
-  int _currentCardIndex = 0;
 
   // Данные последнего отправленного перевода (баланс обновим после ответа сервера)
   double? _pendingAmount;
@@ -101,150 +99,43 @@ class _MainScreenState extends State<MainScreen> {
                   BalanceWidget(balance: currentBalance, isDarkMode: isDarkMode),
                   const SizedBox(height: 20),
 
-                  // --- КАРУСЕЛЬ БАНКОВСКИХ КАРТ ---
-                  SizedBox(
-                    height: 220,
-                    child: PageView(
-                      controller: _pageController,
-                      onPageChanged: (index) {
-                        setState(() {
-                          _currentCardIndex = index;
-                        });
-                      },
-                      children: [
-                        BankCardWidget(cardNumber: cardNumber, cardHolder: userName, isDarkMode: isDarkMode),
-                        BankCardWidget(cardNumber: '0000-0000-0000-0000', cardHolder: userName, isDarkMode: isDarkMode),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-
-                  // Точки-индикаторы под картой
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(2, (index) {
-                      return AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
-                        width: _currentCardIndex == index ? 20 : 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: _currentCardIndex == index ? Colors.blueAccent : (isDarkMode ? Colors.white24 : Colors.black12),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      );
-                    }),
-                  ),
+                  // Карусель банковских карт
+                  CardCarouselWidget(cardNumber: cardNumber, cardHolder: userName, isDarkMode: isDarkMode),
                   const SizedBox(height: 16),
-                  // ---------------------------------
 
                   // Курсы валют с ключом для обновления
                   CurrencyRatesCard(key: _ratesKey),
                   const SizedBox(height: 16),
 
-                  // Кнопки быстрых действий (Платежи, Пополнение)
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () {},
-                          icon: const Icon(Icons.payment, size: 18),
-                          label: const Text('Платежи'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blueAccent,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () {},
-                          icon: const Icon(Icons.add_circle_outline, size: 18),
-                          label: const Text('Пополнение'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blueAccent,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                  // Кнопки быстрых действий
+                  const QuickActionsWidget(),
                   const SizedBox(height: 12),
 
-                  // Кнопка Перевода с идеальными пропорциями и иконками
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: cardBgColor,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: isDarkMode ? Colors.transparent : Colors.grey.withValues(alpha: 0.2)),
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        borderRadius: BorderRadius.circular(12),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(12),
-                          onTap: () => showTransferModal(
-                            context: context,
-                            senderCard: cardNumber,
-                            currentBalance: currentBalance,
-                            isDarkMode: isDarkMode,
-                            onTransferSuccess: (amount, recipient) {
-                              _pendingAmount = amount;
-                              _pendingRecipient = recipient;
-                            },
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Row(
-                                  children: [
-                                    const Icon(Icons.arrow_outward, color: Colors.blueAccent, size: 22),
-                                    const SizedBox(width: 16),
-                                    Text(
-                                      'Перевести',
-                                      style: TextStyle(color: mainTextColor, fontWeight: FontWeight.bold, fontSize: 16),
-                                    ),
-                                  ],
-                                ),
-                                Icon(Icons.chevron_right, color: subTextColor, size: 22),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
+                  // Кнопка перевода
+                  TransferButtonWidget(
+                    cardBgColor: cardBgColor,
+                    mainTextColor: mainTextColor,
+                    subTextColor: subTextColor,
+                    isDarkMode: isDarkMode,
+                    onTap: () => showTransferModal(
+                      context: context,
+                      senderCard: cardNumber,
+                      currentBalance: currentBalance,
+                      isDarkMode: isDarkMode,
+                      onTransferSuccess: (amount, recipient) {
+                        _pendingAmount = amount;
+                        _pendingRecipient = recipient;
+                      },
                     ),
                   ),
                   const SizedBox(height: 24),
 
                   // Список последних операций
-                  Text(
-                    'Последние операции',
-                    style: TextStyle(color: mainTextColor, fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 12),
-
-                  ...transactions.map(
-                    (tx) => TransactionItemWidget(
-                      cardBgColor: cardBgColor,
-                      mainTextColor: mainTextColor,
-                      subTextColor: subTextColor,
-                      icon: tx['icon'],
-                      iconColor: tx['color'],
-                      title: tx['title'],
-                      date: tx['date'],
-                      amount: tx['amount'],
-                      isNegative: tx['isNegative'],
-                    ),
+                  TransactionsListWidget(
+                    transactions: transactions,
+                    cardBgColor: cardBgColor,
+                    mainTextColor: mainTextColor,
+                    subTextColor: subTextColor,
                   ),
                 ],
               ),
