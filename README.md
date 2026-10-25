@@ -2,12 +2,12 @@
 
 # PayBank
 
-Мобильный банк, который я написала целиком сама: приложение на Flutter и сервер на Node.js + TypeScript.
+Мобильный банк написан в связке Flutter + сервер на Node.js(TypeScript).
 Регистрируешься по имени и номеру телефона, получаешь карту с приветственными 5 000 ₽ и можешь переводить деньги другим картам.
 
 ![PayBank](docs/preview.png)
 
-[![CI](https://github.com/USER/REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/USER/REPO/actions)
+(https://github.com/USER/REPO/actions)
 
 **Сервер:** https://paybank-ki76.onrender.com
 
