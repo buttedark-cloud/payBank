@@ -2,15 +2,12 @@
 
 # PayBank
 
-Мобильный банк написан в связке Flutter + сервер на Node.js(TypeScript).
+Мобильный банк, который я написала целиком сама: приложение на Flutter и сервер на Node.js + TypeScript.
 Регистрируешься по имени и номеру телефона, получаешь карту с приветственными 5 000 ₽ и можешь переводить деньги другим картам.
 
 ![PayBank](docs/preview.png)
 
-
-
-https://github.com/user-attachments/assets/9e358a02-33d0-4d21-998d-3d37c2c89125
-
+[![CI](https://github.com/USER/REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/USER/REPO/actions)
 
 **Сервер:** https://paybank-ki76.onrender.com
 
@@ -33,6 +30,9 @@ https://github.com/user-attachments/assets/9e358a02-33d0-4d21-998d-3d37c2c89125
 - **Dio**: запросы к своему серверу, таймауты, обработка ошибок
 - **Свой REST-сервер** на Express + TypeScript: регистрация, счета, переводы, курсы валют
 - **CI** в GitHub Actions и автодеплой на Render
+- **Деньги в копейках**: суммы хранятся и пересылаются целыми числами, без ошибок округления у `double`
+- **Модели** `Account` и `TransferResult` вместо `Map<String, dynamic>`
+- **Тесты** на форматирование денег, модели и `BankBloc` (с поддельным API-сервисом)
 
 ## Из чего сделано
 
@@ -54,7 +54,7 @@ https://github.com/user-attachments/assets/9e358a02-33d0-4d21-998d-3d37c2c89125
 |-------|-------|------------|
 | POST | `/api/register` | `{ name, phone }`, создаёт аккаунт и карту. Если телефон уже есть, вернёт существующий |
 | GET | `/api/account/:cardNumber` | данные счёта по карте |
-| POST | `/api/transfer` | `{ senderCardNumber, recipientCardNumber, amount }` |
+| POST | `/api/transfer` | `{ senderCardNumber, recipientCardNumber, amount }`, сумма в копейках |
 | GET | `/api/rates` | курсы валют (open.er-api.com) |
 
 ## Как запустить
@@ -79,15 +79,24 @@ flutter run
 
 Чтобы попробовать перевод без регистрации второго аккаунта, можно отправить деньги на тестовую карту `4400-9999-8888-7777`.
 
+## Тесты
+
+```bash
+cd bank_client
+flutter test
+```
+
+Проверяются перевод копеек в рубли и обратно, разбор ответов сервера и состояния `BankBloc` при успехе и ошибке.
+
 ## Что здесь упрощено
 
 Это учебный проект, и я знаю, где он не дотягивает до настоящего банка:
 
 - Данные хранятся в памяти сервера и сбрасываются при перезапуске. Следующий шаг: PostgreSQL.
 - Нет авторизации: телефон работает как идентификатор. Нужны пароль или SMS-код и JWT.
-- Баланс на экране обновляется на клиенте сразу после перевода. Правильнее ждать ответ сервера.
-- Тестов пока нет. Хочу покрыть сервер тестами и добавить `flutter analyze` в CI.
+- Тесты есть только у приложения и запускаются вручную. Хочу добавить тесты сервера и запуск `flutter test` и `flutter analyze` в CI.
+- Список операций не хранится на сервере и пропадает при перезапуске приложения.
 
 ## Автор
 
-Veronica, [GitHub](https://github.com/buttedark-cloud) · [LinkedIn](https://www.linkedin.com/in/veronikamalinovskaya)
+ТВОЁ ИМЯ, [GitHub](https://github.com/USER) · [Telegram](https://t.me/USERNAME)

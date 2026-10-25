@@ -7,11 +7,7 @@ You sign up with a name and a phone number, get a card with a 5,000 ₽ welcome 
 
 ![PayBank](docs/preview.png)
 
-
-
-https://github.com/user-attachments/assets/8e486454-8f58-4cfa-a3e7-4072815f4ad4
-
-
+[![CI](https://github.com/USER/REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/USER/REPO/actions)
 
 **Backend:** https://paybank-ki76.onrender.com
 
@@ -34,6 +30,9 @@ It's a learning project, and I used it to practice connecting a client and a ser
 - **Dio**: requests to my own server, timeouts, error handling
 - **My own REST server** in Express + TypeScript: registration, accounts, transfers, exchange rates
 - **CI** with GitHub Actions and automatic deploys to Render
+- **Money in kopecks**: amounts are stored and sent as integers, so no `double` rounding errors
+- **Models** `Account` and `TransferResult` instead of `Map<String, dynamic>`
+- **Tests** for money formatting, models and `BankBloc` (with a mocked API service)
 
 ## Tech stack
 
@@ -55,7 +54,7 @@ It's a learning project, and I used it to practice connecting a client and a ser
 |--------|------|--------------|
 | POST | `/api/register` | `{ name, phone }`, creates an account and a card. If the phone already exists, returns the existing account |
 | GET | `/api/account/:cardNumber` | account data by card number |
-| POST | `/api/transfer` | `{ senderCardNumber, recipientCardNumber, amount }` |
+| POST | `/api/transfer` | `{ senderCardNumber, recipientCardNumber, amount }`, amount in kopecks |
 | GET | `/api/rates` | exchange rates (open.er-api.com) |
 
 ## Running it locally
@@ -80,15 +79,24 @@ The server URL lives in `lib/data/services/api_constants.dart`. For local testin
 
 To try a transfer without registering a second account, send money to the test card `4400-9999-8888-7777`.
 
+## Tests
+
+```bash
+cd bank_client
+flutter test
+```
+
+They cover converting kopecks to rubles and back, parsing server responses, and the `BankBloc` states on success and on error.
+
 ## Known limitations
 
 This is a learning project, and I know where it falls short of a real bank:
 
 - Data is stored in server memory and resets on restart. Next step: PostgreSQL.
 - No real authentication: the phone number acts as an ID. It needs a password or SMS code and JWT.
-- After a transfer the app updates the balance right away, before the server answers. It should wait for the response.
-- No tests yet. I plan to cover the server with tests and add `flutter analyze` to CI.
+- Tests exist only for the app and run manually. I plan to add server tests and run `flutter test` and `flutter analyze` in CI.
+- The operations list isn't stored on the server and disappears when the app restarts.
 
 ## Author
 
-Veronica, [GitHub](https://github.com/buttedark-cloud) · [LinkedIn](https://www.linkedin.com/in/veronikamalinovskaya)
+YOUR NAME, [GitHub](https://github.com/USER) · [Telegram](https://t.me/USERNAME)
