@@ -5,7 +5,7 @@
 A mobile banking app I built end to end on my own: the app is written in Flutter, the server in Node.js + TypeScript.
 You sign up with a name and a phone number, get a card with a 5,000 ₽ welcome bonus, and can transfer money to other cards.
 
-![PayBank](docs/preview.png)
+![PayBank](docs/preview2.png)
 
 
 
